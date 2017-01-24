@@ -22,3 +22,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+/cmd/minecraft-rcon/main
+/cmd/minecraft-rcon/minecraft-rcon
