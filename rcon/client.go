@@ -90,16 +90,16 @@ func (c *Client) sendPayload(request payload) (payload, error) {
 		return payload{}, err
 	}
 
-	repsonse, err := createPayloadFromPacket(c.connection)
+	response, err := createPayloadFromPacket(c.connection)
 	if err != nil {
 		return payload{}, err
 	}
 
-	if repsonse.packetID == PacketIDBadAuth {
+	if response.packetID == PacketIDBadAuth {
 		return payload{}, errors.New("Authentication unsuccessful")
 	}
 
-	return repsonse, nil
+	return response, nil
 }
 
 func createPacketFromPayload(payload payload) ([]byte, error) {
