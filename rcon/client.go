@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	PACKET_ID_BAD_AUTH     = -1
-	PAYLOAD_MAX_SIZE       = 1460
-	SERVERDATA_AUTH        = 3
-	SERVERDATA_EXECCOMMAND = 2
+	PacketIDBadAuth       = -1
+	PayloadMaxSize        = 1460
+	ServerdataAuth        = 3
+	ServerdataExeccommand = 2
 )
 
 type payload struct {
@@ -29,20 +29,20 @@ func (p *payload) calculatePacketSize() int32 {
 	return int32(len(p.packetBody) + 10)
 }
 
-func NewClient(host string, port int, pass string) (Client, error) {
+func NewClient(host string, port int, pass string) (*Client, error) {
 	address := fmt.Sprintf("%s:%d", host, port)
 
 	conn, err := net.DialTimeout("tcp", address, 10*time.Second)
 	if err != nil {
-		return Client{}, err
+		return nil, err
 	}
 
-	client := Client{}
+	client := new(Client)
 	client.connection = conn
 
 	err = client.SendAuthentication(pass)
 	if err != nil {
-		return Client{}, err
+		return nil, err
 	}
 
 	return client, nil
@@ -55,7 +55,7 @@ type Client struct {
 }
 
 func (c *Client) SendAuthentication(pass string) error {
-	payload := createPayload(SERVERDATA_AUTH, pass)
+	payload := createPayload(ServerdataAuth, pass)
 
 	_, err := c.sendPayload(payload)
 	if err != nil {
@@ -66,7 +66,7 @@ func (c *Client) SendAuthentication(pass string) error {
 }
 
 func (c *Client) SendCommand(command string) (string, error) {
-	payload := createPayload(SERVERDATA_EXECCOMMAND, command)
+	payload := createPayload(ServerdataExeccommand, command)
 
 	response, err := c.sendPayload(payload)
 	if err != nil {
@@ -95,7 +95,7 @@ func (c *Client) sendPayload(request payload) (payload, error) {
 		return payload{}, err
 	}
 
-	if repsonse.packetId == PACKET_ID_BAD_AUTH {
+	if repsonse.packetId == PacketIDBadAuth {
 		return payload{}, errors.New("Authentication unsuccessful")
 	}
 
@@ -111,8 +111,8 @@ func createPacketFromPayload(payload payload) ([]byte, error) {
 	binary.Write(&buf, binary.LittleEndian, payload.packetBody)
 	binary.Write(&buf, binary.LittleEndian, [2]byte{})
 
-	if buf.Len() >= PAYLOAD_MAX_SIZE {
-		return nil, fmt.Errorf("Payload exceeded maximum allowed size of %d.", PAYLOAD_MAX_SIZE)
+	if buf.Len() >= PayloadMaxSize {
+		return nil, fmt.Errorf("Payload exceeded maximum allowed size of %d.", PayloadMaxSize)
 	}
 
 	return buf.Bytes(), nil
