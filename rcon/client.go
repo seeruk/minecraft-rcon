@@ -20,7 +20,7 @@ const (
 )
 
 type payload struct {
-	packetId   int32  // 4 bytes
+	packetID   int32  // 4 bytes
 	packetType int32  // 4 bytes
 	packetBody []byte // Varies
 }
@@ -48,8 +48,8 @@ func NewClient(host string, port int, pass string) (*Client, error) {
 	return client, nil
 }
 
-// RCON client based around the Valve RCON Protocol, see more about the protocol in the Valve Wiki
-// https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
+// Client is an RCON client based around the Valve RCON Protocol, see more about the protocol in the
+// Valve Wiki: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
 type Client struct {
 	connection net.Conn
 }
@@ -95,7 +95,7 @@ func (c *Client) sendPayload(request payload) (payload, error) {
 		return payload{}, err
 	}
 
-	if repsonse.packetId == PacketIDBadAuth {
+	if repsonse.packetID == PacketIDBadAuth {
 		return payload{}, errors.New("Authentication unsuccessful")
 	}
 
@@ -106,7 +106,7 @@ func createPacketFromPayload(payload payload) ([]byte, error) {
 	var buf bytes.Buffer
 
 	binary.Write(&buf, binary.LittleEndian, payload.calculatePacketSize())
-	binary.Write(&buf, binary.LittleEndian, payload.packetId)
+	binary.Write(&buf, binary.LittleEndian, payload.packetID)
 	binary.Write(&buf, binary.LittleEndian, payload.packetType)
 	binary.Write(&buf, binary.LittleEndian, payload.packetBody)
 	binary.Write(&buf, binary.LittleEndian, [2]byte{})
@@ -120,7 +120,7 @@ func createPacketFromPayload(payload payload) ([]byte, error) {
 
 func createPayload(packetType int, body string) payload {
 	return payload{
-		packetId:   rand.Int31(),
+		packetID:   rand.Int31(),
 		packetType: int32(packetType),
 		packetBody: []byte(body),
 	}
@@ -128,7 +128,7 @@ func createPayload(packetType int, body string) payload {
 
 func createPayloadFromPacket(packetReader io.Reader) (payload, error) {
 	var packetSize int32
-	var packetId int32
+	var packetID int32
 	var packetType int32
 
 	// Read packetSize
@@ -138,7 +138,7 @@ func createPayloadFromPacket(packetReader io.Reader) (payload, error) {
 	}
 
 	// Read packetId
-	err = binary.Read(packetReader, binary.LittleEndian, &packetId)
+	err = binary.Read(packetReader, binary.LittleEndian, &packetID)
 	if err != nil {
 		return payload{}, err
 	}
@@ -158,7 +158,7 @@ func createPayloadFromPacket(packetReader io.Reader) (payload, error) {
 	}
 
 	result := payload{}
-	result.packetId = packetId
+	result.packetID = packetID
 	result.packetType = packetType
 	result.packetBody = packetBody
 
