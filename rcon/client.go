@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -72,7 +73,10 @@ func (c *Client) SendCommand(command string) (string, error) {
 		return "", err
 	}
 
-	return string(response.packetBody), nil
+	// Trim null bytes
+	response.packetBody = bytes.Trim(response.packetBody, "\x00")
+
+	return strings.TrimSpace(string(response.packetBody)), nil
 }
 
 func (c *Client) sendPayload(request payload) (payload, error) {

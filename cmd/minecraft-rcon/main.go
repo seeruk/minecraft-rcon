@@ -31,7 +31,9 @@ func main() {
 		handleError(err)
 	}
 
-	fmt.Println(response)
+	if response != "" {
+		fmt.Println(response)
+	}
 }
 
 func handleError(err error) {
