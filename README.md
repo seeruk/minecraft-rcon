@@ -1,9 +1,9 @@
 # minecraft-rcon
 
 A Golang Minecraft RCON client, for automating RCON commands in non-interactive environments. This
-tool was brough about because of a need to automate certain actions without the use of the 
-interactive console, the initial specific use-case was for managing a Minecraft server running in a
-Docker container.
+tool was built because of a need to automate certain actions without the use of the interactive 
+console, the initial specific use-case was for managing a Minecraft server running in a Docker 
+container.
 
 ## Installing
 
