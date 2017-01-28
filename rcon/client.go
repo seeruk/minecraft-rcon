@@ -10,6 +10,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"github.com/SeerUK/minecraft-rcon/errhandling"
 )
 
 const (
@@ -79,30 +81,30 @@ func (c *Client) SendCommand(command string) (string, error) {
 	return strings.TrimSpace(string(response.packetBody)), nil
 }
 
-func (c *Client) sendPayload(request payload) (payload, error) {
+func (c *Client) sendPayload(request *payload) (*payload, error) {
 	packet, err := createPacketFromPayload(request)
 	if err != nil {
-		return payload{}, err
+		return nil, err
 	}
 
 	_, err = c.connection.Write(packet)
 	if err != nil {
-		return payload{}, err
+		return nil, err
 	}
 
 	response, err := createPayloadFromPacket(c.connection)
 	if err != nil {
-		return payload{}, err
+		return nil, err
 	}
 
 	if response.packetID == PacketIDBadAuth {
-		return payload{}, errors.New("Authentication unsuccessful")
+		return nil, errors.New("Authentication unsuccessful")
 	}
 
 	return response, nil
 }
 
-func createPacketFromPayload(payload payload) ([]byte, error) {
+func createPacketFromPayload(payload *payload) ([]byte, error) {
 	var buf bytes.Buffer
 
 	binary.Write(&buf, binary.LittleEndian, payload.calculatePacketSize())
@@ -118,46 +120,39 @@ func createPacketFromPayload(payload payload) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func createPayload(packetType int, body string) payload {
-	return payload{
+func createPayload(packetType int, body string) *payload {
+	return &payload{
 		packetID:   rand.Int31(),
 		packetType: int32(packetType),
 		packetBody: []byte(body),
 	}
 }
 
-func createPayloadFromPacket(packetReader io.Reader) (payload, error) {
+func createPayloadFromPacket(packetReader io.Reader) (*payload, error) {
 	var packetSize int32
 	var packetID int32
 	var packetType int32
 
-	// Read packetSize
-	err := binary.Read(packetReader, binary.LittleEndian, &packetSize)
-	if err != nil {
-		return payload{}, err
-	}
+	errs := errhandling.NewStack()
 
-	// Read packetId
-	err = binary.Read(packetReader, binary.LittleEndian, &packetID)
-	if err != nil {
-		return payload{}, err
-	}
+	// Read packetSize, packetID, and packetType
+	errs.Add(binary.Read(packetReader, binary.LittleEndian, &packetSize))
+	errs.Add(binary.Read(packetReader, binary.LittleEndian, &packetID))
+	errs.Add(binary.Read(packetReader, binary.LittleEndian, &packetType))
 
-	// Read packetType
-	err = binary.Read(packetReader, binary.LittleEndian, &packetType)
-	if err != nil {
-		return payload{}, err
+	if !errs.Empty() {
+		return nil, errors.New("createPayloadFromPacket: Failed reading bytes")
 	}
 
 	// Body size length is packet size without the empty string byte at the end
 	packetBody := make([]byte, packetSize-8)
 
-	_, err = io.ReadFull(packetReader, packetBody)
+	_, err := io.ReadFull(packetReader, packetBody)
 	if err != nil {
-		return payload{}, err
+		return nil, err
 	}
 
-	result := payload{}
+	result := new(payload)
 	result.packetID = packetID
 	result.packetType = packetType
 	result.packetBody = packetBody
