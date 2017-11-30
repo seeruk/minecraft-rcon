@@ -9,7 +9,9 @@ func NewStack() *Stack {
 }
 
 func (s *Stack) Add(error error) {
-	s.errors = append(s.errors, error)
+	if error != nil {
+		s.errors = append(s.errors, error)
+	}
 }
 
 func (s *Stack) Empty() bool {
