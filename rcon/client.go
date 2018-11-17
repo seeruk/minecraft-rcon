@@ -41,6 +41,7 @@ func NewClient(host string, port int, pass string) (*Client, error) {
 
 	client := new(Client)
 	client.connection = conn
+	client.password = pass
 
 	err = client.SendAuthentication(pass)
 	if err != nil {
@@ -54,6 +55,7 @@ func NewClient(host string, port int, pass string) (*Client, error) {
 // Valve Wiki: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol
 type Client struct {
 	connection net.Conn
+	password   string
 }
 
 func (c *Client) SendAuthentication(pass string) error {
@@ -79,6 +81,23 @@ func (c *Client) SendCommand(command string) (string, error) {
 	response.packetBody = bytes.Trim(response.packetBody, "\x00")
 
 	return strings.TrimSpace(string(response.packetBody)), nil
+}
+
+func (c *Client) Reconnect() error {
+	conn, err := net.DialTimeout("tcp",
+		c.connection.RemoteAddr().String(), 10*time.Second)
+	if err != nil {
+		return err
+	}
+
+	c.connection = conn
+
+	err = c.SendAuthentication(c.password)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Client) sendPayload(request *payload) (*payload, error) {
