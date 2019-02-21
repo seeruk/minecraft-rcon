@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/SeerUK/minecraft-rcon/rcon"
+	"github.com/seeruk/minecraft-rcon/rcon"
 )
 
 func main() {

@@ -10,7 +10,7 @@ container.
 Ensure you have Go installed and set up on your machine, then run the following command:
 
 ```
-$ go install github.com/SeerUK/minecraft-rcon/... 
+$ go install github.com/seeruk/minecraft-rcon/... 
 ```
 
 ## Usage
